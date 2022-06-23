@@ -1,0 +1,40 @@
+on: [push, pull_request]
+
+name: compile
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target:
+          - x86_64-pc-windows-gnu
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Get version
+        id: get_version
+        run: echo "::set-output name=version::$(sed -n '/^version/p' Cargo.toml | sed 's/version = //' | sed 's/\"//g')"
+      - name: Set rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - name: Cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          use-cross: true
+          toolchain: stable
+          args: --release --target=${{ matrix.target }}
+      - name: Upload windows x64 bin
+        if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: target/${{ matrix.target }}/release/添加注册表.exe
+            asset_name: 添加注册表.exe
+            tag: ${{ steps.get_version.outputs.version }}
+            overwrite: true
