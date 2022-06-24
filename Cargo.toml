@@ -11,6 +11,7 @@ name = "igame_registry"
 path = "src/main.rs"
 
 [profile.release]
+opt-level = "s"
 lto = true
 
 [dependencies]
